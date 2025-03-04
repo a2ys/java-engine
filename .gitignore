@@ -1,0 +1,100 @@
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Virtual machine crash logs
+hs_err_pid*
+replay_pid*
+
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+# https://github.com/takari/maven-wrapper#usage-without-binary-jar
+.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse m2e generated files
+
+# Eclipse Core
+.project
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
+
+
+### IDE files ###
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.settings/
+bin/
+
+# NetBeans
+nbproject/
+build/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+
+# VS Code
+.vscode/
+*.code-workspace
+
+### OS-specific files ###
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+
+# Linux
+*~
+.fuse_hidden*
+
+.directory
+.Trash-*
+.nfs*
+
