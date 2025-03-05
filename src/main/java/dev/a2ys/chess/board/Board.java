@@ -47,6 +47,70 @@ public class Board {
         enPassantSquare = -1;
     }
 
+    public long getWhitePawns() {
+        return whitePawns;
+    }
+
+    public long getWhiteKnights() {
+        return whiteKnights;
+    }
+
+    public long getWhiteBishops() {
+        return whiteBishops;
+    }
+
+    public long getWhiteRooks() {
+        return whiteRooks;
+    }
+
+    public long getWhiteQueens() {
+        return whiteQueens;
+    }
+
+    public long getWhiteKing() {
+        return whiteKing;
+    }
+
+    public long getBlackPawns() {
+        return blackPawns;
+    }
+
+    public long getBlackKnights() {
+        return blackKnights;
+    }
+
+    public long getBlackBishops() {
+        return blackBishops;
+    }
+
+    public long getBlackRooks() {
+        return blackRooks;
+    }
+
+    public long getBlackQueens() {
+        return blackQueens;
+    }
+
+    public long getBlackKing() {
+        return blackKing;
+    }
+
+    public boolean canWhiteSideCastleKingside() {
+        return whiteKingsideCastle;
+    }
+
+    public boolean canWhiteSideCastleQueenside() {
+        return whiteQueensideCastle;
+    }
+
+    public boolean canBlackSideCastleKingside() {
+        return blackKingsideCastle;
+    }
+
+    public boolean canBlackSideCastleQueenside() {
+        return blackQueensideCastle;
+    }
+
     public long getWhitePieces() {
         return whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueens | whiteKing;
     }
