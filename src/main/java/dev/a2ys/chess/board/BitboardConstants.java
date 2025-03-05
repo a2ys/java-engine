@@ -37,6 +37,13 @@ public class BitboardConstants {
     public static final long BLACK_QUEENS_INITIAL = 0x0800000000000000L;
     public static final long BLACK_KINGS_INITIAL = 0x1000000000000000L;
 
+    // Edge masks for move generation
+    public static final long NOT_FILE_A = ~FILE_A;  // All squares except A-file
+    public static final long NOT_FILE_H = ~FILE_H;  // All squares except H-file
+
+    public static final long NOT_FILE_AB = ~(FILE_A | FILE_B);  // For knight moves that go 2 east
+    public static final long NOT_FILE_GH = ~(FILE_G | FILE_H);  // For knight moves that go 2 west
+
     // Square Indices
     public static final int A1 = 0, B1 = 1, C1 = 2, D1 = 3, E1 = 4, F1 = 5, G1 = 6, H1 = 7;
     public static final int A2 = 8, B2 = 9, C2 = 10, D2 = 11, E2 = 12, F2 = 13, G2 = 14, H2 = 15;
