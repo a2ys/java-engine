@@ -1,7 +1,9 @@
 package dev.a2ys.chess.board;
 
 import dev.a2ys.chess.move.Move;
+import dev.a2ys.chess.move.MoveGenerator;
 
+import java.util.List;
 import java.util.Stack;
 
 public class Board {
@@ -407,5 +409,76 @@ public class Board {
         blackKingsideCastle = previousState.blackKingsideCastle;
         blackQueensideCastle = previousState.blackQueensideCastle;
         enPassantSquare = previousState.enPassantSquare;
+    }
+
+    public void setPosition(String fen) {
+        // Clear the current position
+        whitePawns = whiteKnights = whiteBishops = whiteRooks = whiteQueens = whiteKing = 0L;
+        blackPawns = blackKnights = blackBishops = blackRooks = blackQueens = blackKing = 0L;
+
+        String[] parts = fen.split(" ");
+        String piecePositions = parts[0];
+        String activeColor = parts[1];
+        String castlingRights = parts[2];
+        String epSquare = parts[3];
+
+        // Parse piece positions
+        int rank = 7;  // Start at the 8th rank (index 7)
+        int file = 0;  // Start at the A file (index 0)
+
+        for (char c : piecePositions.toCharArray()) {
+            if (c == '/') {
+                rank--;
+                file = 0;
+            } else if (Character.isDigit(c)) {
+                file += Character.getNumericValue(c);
+            } else {
+                int square = rank * 8 + file;
+                long bitboard = 1L << square;
+
+                switch (c) {
+                    case 'P': whitePawns |= bitboard; break;
+                    case 'N': whiteKnights |= bitboard; break;
+                    case 'B': whiteBishops |= bitboard; break;
+                    case 'R': whiteRooks |= bitboard; break;
+                    case 'Q': whiteQueens |= bitboard; break;
+                    case 'K': whiteKing |= bitboard; break;
+                    case 'p': blackPawns |= bitboard; break;
+                    case 'n': blackKnights |= bitboard; break;
+                    case 'b': blackBishops |= bitboard; break;
+                    case 'r': blackRooks |= bitboard; break;
+                    case 'q': blackQueens |= bitboard; break;
+                    case 'k': blackKing |= bitboard; break;
+                }
+                file++;
+            }
+        }
+
+        // Set side to move
+        whiteToMove = activeColor.equals("w");
+
+        // Set castling rights
+        whiteKingsideCastle = castlingRights.contains("K");
+        whiteQueensideCastle = castlingRights.contains("Q");
+        blackKingsideCastle = castlingRights.contains("k");
+        blackQueensideCastle = castlingRights.contains("q");
+
+        // Set en passant square
+        if (epSquare.equals("-")) {
+            enPassantSquare = -1;
+        } else {
+            int file_ep = epSquare.charAt(0) - 'a';
+            int rank_ep = epSquare.charAt(1) - '1';
+            enPassantSquare = rank_ep * 8 + file_ep;
+        }
+
+        // Clear the board state history
+        boardStates.clear();
+    }
+
+    // Generate all legal moves for the current position
+    public List<Move> generateLegalMoves() {
+        MoveGenerator moveGenerator = new MoveGenerator();
+        return moveGenerator.generateLegalMoves(this);
     }
 }
