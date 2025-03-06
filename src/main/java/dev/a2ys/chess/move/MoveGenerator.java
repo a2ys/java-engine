@@ -424,7 +424,113 @@ public class MoveGenerator {
             moves.add(new Move(fromSquare, toSquare, Move.CAPTURE));
         }
 
-        // TODO: Promotions and En-passant captures
+        long promotionPush = isWhite
+                ? ((pawns & rankBeforePromotion) << 8 & emptySquares)
+                : ((pawns & rankBeforePromotion) >> 8 & emptySquares);
+
+        while (promotionPush != 0) {
+            int toSquare = Long.numberOfTrailingZeros(promotionPush);
+            promotionPush &= promotionPush - 1;
+
+            int fromSquare = isWhite ? toSquare - 8 : toSquare + 8;
+
+            moves.add(new Move(fromSquare, toSquare, Move.KNIGHT_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.BISHOP_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.ROOK_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.QUEEN_PROMOTION));
+        }
+
+        long leftCapturePromotion;
+        if (isWhite) {
+            leftCapturePromotion = ((pawns & rankBeforePromotion) << 9) & BitboardConstants.NOT_FILE_H & enemyPieces;
+        } else {
+            leftCapturePromotion = ((pawns & rankBeforePromotion) >> 7) & BitboardConstants.NOT_FILE_H & enemyPieces;
+        }
+
+        while (leftCapturePromotion != 0) {
+            int toSquare = Long.numberOfTrailingZeros(leftCapturePromotion);
+            leftCapturePromotion &= leftCapturePromotion - 1;
+
+            int fromSquare = isWhite ? toSquare - 9 : toSquare + 7;
+
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION_CAPTURE, Move.KNIGHT_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION_CAPTURE, Move.BISHOP_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION_CAPTURE, Move.ROOK_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION_CAPTURE, Move.QUEEN_PROMOTION));
+        }
+
+        long rightCapturePromotion;
+        if (isWhite) {
+            rightCapturePromotion = ((pawns & rankBeforePromotion) << 7) & BitboardConstants.NOT_FILE_A & enemyPieces;
+        } else {
+            rightCapturePromotion = ((pawns & rankBeforePromotion) >> 9) & BitboardConstants.NOT_FILE_A & enemyPieces;
+        }
+
+        while (rightCapturePromotion != 0) {
+            int toSquare = Long.numberOfTrailingZeros(rightCapturePromotion);
+            rightCapturePromotion &= rightCapturePromotion - 1;
+
+            int fromSquare = isWhite ? toSquare - 7 : toSquare + 9;
+
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION_CAPTURE, Move.KNIGHT_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION_CAPTURE, Move.BISHOP_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION_CAPTURE, Move.ROOK_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION_CAPTURE, Move.QUEEN_PROMOTION));
+        }
+
+        int epSquare = board.getEnPassantSquare();
+        if (epSquare != -1) {
+            long epTarget = 1L << epSquare;
+
+            long epCapturers;
+            if (isWhite) {
+                epCapturers = ((pawns >> 7) & BitboardConstants.NOT_FILE_H & pawns) |
+                        ((pawns >> 9) & BitboardConstants.NOT_FILE_A & pawns);
+            } else {
+                epCapturers = ((pawns << 7) & BitboardConstants.NOT_FILE_H & pawns) |
+                        ((pawns << 9) & BitboardConstants.NOT_FILE_A & pawns);
+            }
+
+            while (epCapturers != 0) {
+                int fromSquare = Long.numberOfTrailingZeros(epCapturers);
+                epCapturers &= epCapturers - 1;
+
+                moves.add(new Move(fromSquare, epSquare, Move.EN_PASSANT_CAPTURE));
+            }
+        }
+
+        return moves;
+    }
+
+    // Generate all the legal moves
+    public List<Move> generateLegalMoves(Board board) {
+        List<Move> pseudoLegalMoves = generateAllMoves(board);
+        List<Move> legalMoves = new ArrayList<>();
+
+        boolean isWhite = board.isWhiteToMove();
+
+        for (Move move : pseudoLegalMoves) {
+            board.makeMove(move);
+            if (isKingInCheck(board, isWhite)) {
+                legalMoves.add(move);
+            }
+            board.unmakeMove();
+        }
+
+        return legalMoves;
+    }
+
+    // Generate all the pseudo-legal moves
+    public List<Move> generateAllMoves(Board board) {
+        List<Move> moves = new ArrayList<>();
+        boolean isWhite = board.isWhiteToMove();
+
+        moves.addAll(generatePawnMoves(board, isWhite));
+        moves.addAll(generateKnightMoves(board, isWhite));
+        moves.addAll(generateBishopMoves(board, isWhite));
+        moves.addAll(generateRookMoves(board, isWhite));
+        moves.addAll(generateQueenMoves(board, isWhite));
+        moves.addAll(generateKingMoves(board, isWhite));
 
         return moves;
     }
@@ -499,5 +605,13 @@ public class MoveGenerator {
 
         // No attacks found
         return false;
+    }
+
+    public boolean isKingInCheck(Board board, boolean whiteKing) {
+        int kingSquare = whiteKing ?
+                Long.numberOfTrailingZeros(board.getWhiteKing()) :
+                Long.numberOfTrailingZeros(board.getBlackKing());
+
+        return isSquareAttacked(board, kingSquare, !whiteKing);
     }
 }
