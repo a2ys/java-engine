@@ -259,7 +259,7 @@ public class Board {
         // When the king moves, lose all castling rights for that color
         if (movingPiece == WHITE_KING) {
             whiteKingsideCastle = false;
-            blackKingsideCastle = false;
+            whiteQueensideCastle = false;
         } else if (movingPiece == BLACK_KING) {
             blackKingsideCastle = false;
             blackQueensideCastle = false;
