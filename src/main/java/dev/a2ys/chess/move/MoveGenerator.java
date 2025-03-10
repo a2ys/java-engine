@@ -14,12 +14,12 @@ public class MoveGenerator {
         // Generate king attacks in all 8 directions
         attacks |= ((king << 8));                                   // North
         attacks |= ((king >> 8));                                   // South
-        attacks |= ((king << 1) & BitboardConstants.NOT_FILE_A);    // East
-        attacks |= ((king >> 1) & BitboardConstants.NOT_FILE_H);    // West
-        attacks |= ((king << 9) & BitboardConstants.NOT_FILE_A);    // Northeast
-        attacks |= ((king << 7) & BitboardConstants.NOT_FILE_H);    // Northwest
-        attacks |= ((king >> 7) & BitboardConstants.NOT_FILE_A);    // Southeast
-        attacks |= ((king >> 9) & BitboardConstants.NOT_FILE_H);    // Southwest
+        attacks |= ((king << 1) & BitboardConstants.NOT_FILE_H);    // East
+        attacks |= ((king >> 1) & BitboardConstants.NOT_FILE_A);    // West
+        attacks |= ((king << 9) & BitboardConstants.NOT_FILE_H);    // Northeast
+        attacks |= ((king << 7) & BitboardConstants.NOT_FILE_A);    // Northwest
+        attacks |= ((king >> 7) & BitboardConstants.NOT_FILE_H);    // Southeast
+        attacks |= ((king >> 9) & BitboardConstants.NOT_FILE_A);    // Southwest
 
         return attacks;
     }
@@ -28,14 +28,14 @@ public class MoveGenerator {
         long knight = 1L << square;
         long attacks = 0L;
 
-        attacks |= ((knight << 17) & BitboardConstants.NOT_FILE_H)  // Up 2, Left 1
-                | ((knight << 15) & BitboardConstants.NOT_FILE_A)   // Up 2, Right 1
-                | ((knight >> 17) & BitboardConstants.NOT_FILE_H)   // Down 2, Left 1
-                | ((knight >> 15) & BitboardConstants.NOT_FILE_A)   // Down 2, Right 1
-                | ((knight << 10) & BitboardConstants.NOT_FILE_GH)  // Up 1, Left 2
-                | ((knight << 6) &  BitboardConstants.NOT_FILE_AB)  // Up 1, Right 2
-                | ((knight >> 10) & BitboardConstants.NOT_FILE_GH)  // Down 1, Left 2
-                | ((knight >> 6) & BitboardConstants.NOT_FILE_AB);  // Down 1, Right 2
+        attacks |= ((knight << 17) & BitboardConstants.NOT_FILE_H);  // Up 2, Left 1
+        attacks |= ((knight << 15) & BitboardConstants.NOT_FILE_A);  // Up 2, Right 1
+        attacks |= ((knight >> 17) & BitboardConstants.NOT_FILE_A);  // Down 2, Right 1
+        attacks |= ((knight >> 15) & BitboardConstants.NOT_FILE_H);  // Down 2, Left 1
+        attacks |= ((knight << 10) & BitboardConstants.NOT_FILE_GH); // Up 1, Left 2
+        attacks |= ((knight << 6)  & BitboardConstants.NOT_FILE_AB); // Up 1, Right 2
+        attacks |= ((knight >> 10) & BitboardConstants.NOT_FILE_AB); // Down 1, Right 2
+        attacks |= ((knight >> 6)  & BitboardConstants.NOT_FILE_GH); // Down 1, Left 2
 
         return attacks;
     }
@@ -52,7 +52,7 @@ public class MoveGenerator {
             long targetBit = 1L << targetSquare;
             attacks |= targetBit;
 
-            if ((occupied & targetSquare) != 0) break;
+            if ((occupied & targetBit) != 0) break;
         }
 
         // Northwest direction
@@ -88,27 +88,33 @@ public class MoveGenerator {
     // Right now, this is using ray-casting, I will learn magic bitboards and optimize this.
     public long getStraightAttacks(int square, long occupied) {
         long attacks = 0L;
+        int rank = square / 8;
+        int file = square % 8;
 
         // North
-        for (int s = square + 8; s < 64; s += 8) {
+        for (int r = rank + 1; r < 8; r++) {
+            int s = r * 8 + file;
             attacks |= (1L << s);
             if ((occupied & (1L << s)) != 0) break;
         }
 
         // South
-        for (int s = square - 8; s >= 0; s -= 8) {
-            attacks |= (1L << s);
-            if ((occupied & (1L << s)) != 0) break;
-        }
-
-        // West
-        for (int s = square + 1; s % 8 != 0 && s < 64; s++) {
+        for (int r = rank - 1; r >= 0; r--) {
+            int s = r * 8 + file;
             attacks |= (1L << s);
             if ((occupied & (1L << s)) != 0) break;
         }
 
         // East
-        for (int s = square - 1; s % 8 != 7 && s >= 0; s--) {
+        for (int f = file + 1; f < 8; f++) {
+            int s = rank * 8 + f;
+            attacks |= (1L << s);
+            if ((occupied & (1L << s)) != 0) break;
+        }
+
+        // West
+        for (int f = file - 1; f >= 0; f--) {
+            int s = rank * 8 + f;
             attacks |= (1L << s);
             if ((occupied & (1L << s)) != 0) break;
         }
@@ -129,7 +135,7 @@ public class MoveGenerator {
 
         // These are the pieces from both sides
         long friendlyPieces = isWhite ? board.getWhitePieces() : board.getBlackPieces();
-        long enemyPieces = isWhite ? board.getWhitePieces() : board.getBlackPieces();
+        long enemyPieces = isWhite ? board.getBlackPieces() : board.getWhitePieces();
 
         // Go through each knight
         while (knights != 0) {
@@ -155,7 +161,7 @@ public class MoveGenerator {
                 attacks &= attacks - 1;
 
                 // Now, we determine if this is a capture move or a quiet move
-                if ((1L << toSquare & enemyPieces) != 0) {
+                if (((1L << toSquare) & enemyPieces) != 0) {
                     // This is a capture move
                     moves.add(new Move(fromSquare, toSquare, Move.CAPTURE));
                 } else {
@@ -191,7 +197,7 @@ public class MoveGenerator {
                 int toSquare = Long.numberOfTrailingZeros(attacks);
                 attacks &= attacks - 1;
 
-                if ((1L << toSquare & enemyPieces) != 0) {
+                if (((1L << toSquare) & enemyPieces) != 0) {
                     moves.add(new Move(fromSquare, toSquare, Move.CAPTURE));
                 } else {
                     moves.add(new Move(fromSquare, toSquare, Move.QUIET_MOVE));
@@ -222,7 +228,7 @@ public class MoveGenerator {
                 int toSquare = Long.numberOfTrailingZeros(attacks);
                 attacks &= attacks - 1;
 
-                if ((1L << toSquare & enemyPieces) != 0) {
+                if (((1L << toSquare) & enemyPieces) != 0) {
                     moves.add(new Move(fromSquare, toSquare, Move.CAPTURE));
                 } else {
                     moves.add(new Move(fromSquare, toSquare, Move.QUIET_MOVE));
@@ -253,7 +259,7 @@ public class MoveGenerator {
                 int toSquare = Long.numberOfTrailingZeros(attacks);
                 attacks &= attacks - 1;
 
-                if ((1L << toSquare & enemyPieces) != 0) {
+                if (((1L << toSquare) & enemyPieces) != 0) {
                     moves.add(new Move(fromSquare, toSquare, Move.CAPTURE));
                 } else {
                     moves.add(new Move(fromSquare, toSquare, Move.QUIET_MOVE));
@@ -288,12 +294,12 @@ public class MoveGenerator {
             }
         }
 
-        addCastlingMoves(board, isWhite, kingSquare, moves);
+        addCastlingMoves(board, isWhite, moves);
 
         return moves;
     }
 
-    private void addCastlingMoves(Board board, boolean isWhite, int kingSquare, List<Move> moves) {
+    private void addCastlingMoves(Board board, boolean isWhite, List<Move> moves) {
         if (isWhite) {
             // White kingside castling
             if (board.canWhiteSideCastleKingside()
@@ -307,7 +313,7 @@ public class MoveGenerator {
 
             // White queenside castling
             if (board.canWhiteSideCastleQueenside()
-                    && (board.getOccupied() & 0x0000000000000070L) == 0     // Check if the B1, C1 and D1 squares are empty
+                    && (board.getOccupied() & 0x000000000000000EL) == 0     // Check if the B1, C1 and D1 squares are empty
                     && !isSquareAttacked(board, 4, false)  // Check if the white king is not attacked
                     && !isSquareAttacked(board, 3, false)  // Check if the D1 square is not attacked
                     && !isSquareAttacked(board, 2, false)  // Check if the C1 square is not attacked
@@ -317,7 +323,7 @@ public class MoveGenerator {
         } else {
             // Black kingside castling
             if (board.canBlackSideCastleKingside() &&
-                    (board.getOccupied() & 0x6000000000000000L) == 0 &&     // Check if the F8 and G8 squares are empty
+                    (board.getOccupied() & 0x0600000000000000L) == 0 &&     // Check if the F8 and G8 squares are empty
                     !isSquareAttacked(board, 60, true) &&  // Check if the black king is not attacked
                     !isSquareAttacked(board, 61, true) &&  // Check if the F8 square is not attacked
                     !isSquareAttacked(board, 62, true)     // Check if the G8 square is not attacked
@@ -327,7 +333,7 @@ public class MoveGenerator {
 
             // Black queenside castling
             if (board.canBlackSideCastleQueenside() &&
-                    (board.getOccupied() & 0x7000000000000000L) == 0 &&     // Check if the B8, C8, and D8 squares are empty
+                    (board.getOccupied() & 0x0E00000000000000L) == 0 &&     // Check if the B8, C8, and D8 squares are empty
                     !isSquareAttacked(board, 60, true) &&  // Check the black king is not attacked
                     !isSquareAttacked(board, 59, true) &&  // Check if the D8 square is not attacked
                     !isSquareAttacked(board, 58, true)     // Check if the C8 square is not attacked
@@ -371,8 +377,13 @@ public class MoveGenerator {
         // Here we are checking for the pawns which are on the first rank and can double push
         // These pawns are capable of doing a double push
         long doublePushCandidates = isWhite
-                ? ((pawns << 8 & startRank) & emptySquares)
-                : ((pawns >> 8 & startRank) & emptySquares);
+                ? (pawns & BitboardConstants.RANK_2)
+                : (pawns & BitboardConstants.RANK_7);
+
+        // Apply single push to candidates, ensuring the intermediate square is empty
+        doublePushCandidates = isWhite
+                ? ((doublePushCandidates << 8) & emptySquares)
+                : ((doublePushCandidates >> 8) & emptySquares);
 
         // So, we are going to give all the pawns a double push who qualify for a double push above
         long doublePush = isWhite
@@ -434,10 +445,10 @@ public class MoveGenerator {
 
             int fromSquare = isWhite ? toSquare - 8 : toSquare + 8;
 
-            moves.add(new Move(fromSquare, toSquare, Move.KNIGHT_PROMOTION));
-            moves.add(new Move(fromSquare, toSquare, Move.BISHOP_PROMOTION));
-            moves.add(new Move(fromSquare, toSquare, Move.ROOK_PROMOTION));
-            moves.add(new Move(fromSquare, toSquare, Move.QUEEN_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION, Move.KNIGHT_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION, Move.BISHOP_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION, Move.ROOK_PROMOTION));
+            moves.add(new Move(fromSquare, toSquare, Move.PROMOTION, Move.QUEEN_PROMOTION));
         }
 
         long leftCapturePromotion;
@@ -484,11 +495,11 @@ public class MoveGenerator {
 
             long epCapturers;
             if (isWhite) {
-                epCapturers = ((pawns >> 7) & BitboardConstants.NOT_FILE_H & pawns) |
-                        ((pawns >> 9) & BitboardConstants.NOT_FILE_A & pawns);
+                epCapturers = ((epTarget >> 9) & BitboardConstants.NOT_FILE_A & pawns) |
+                        ((epTarget >> 7) & BitboardConstants.NOT_FILE_H & pawns);
             } else {
-                epCapturers = ((pawns << 7) & BitboardConstants.NOT_FILE_H & pawns) |
-                        ((pawns << 9) & BitboardConstants.NOT_FILE_A & pawns);
+                epCapturers = ((epTarget << 7) & BitboardConstants.NOT_FILE_A & pawns) |
+                        ((epTarget << 9) & BitboardConstants.NOT_FILE_H & pawns);
             }
 
             while (epCapturers != 0) {
@@ -511,9 +522,11 @@ public class MoveGenerator {
 
         for (Move move : pseudoLegalMoves) {
             board.makeMove(move);
-            if (isKingInCheck(board, isWhite)) {
+
+            if (!isKingInCheck(board, isWhite)) {
                 legalMoves.add(move);
             }
+
             board.unmakeMove();
         }
 
@@ -542,8 +555,8 @@ public class MoveGenerator {
         if (byWhite) {
             // Check if white pawns attack the square
             long whitePawns = board.getWhitePawns();
-            if ((((targetSquare >> 7) & BitboardConstants.NOT_FILE_A) & whitePawns) != 0 ||
-                    (((targetSquare >> 9) & BitboardConstants.NOT_FILE_H) & whitePawns) != 0) {
+            if ((((targetSquare >> 9) & BitboardConstants.NOT_FILE_H) & whitePawns) != 0 ||
+                    (((targetSquare >> 7) & BitboardConstants.NOT_FILE_A) & whitePawns) != 0) {
                 return true;
             }
 
@@ -573,8 +586,8 @@ public class MoveGenerator {
         } else {
             // Check if black pawns attack the square
             long blackPawns = board.getBlackPawns();
-            if ((((targetSquare << 7) & BitboardConstants.NOT_FILE_H) & blackPawns) != 0 ||
-                    (((targetSquare << 9) & BitboardConstants.NOT_FILE_A) & blackPawns) != 0) {
+            if ((((targetSquare << 9) & BitboardConstants.NOT_FILE_A) & blackPawns) != 0 ||
+                    (((targetSquare << 7) & BitboardConstants.NOT_FILE_H) & blackPawns) != 0) {
                 return true;
             }
 
